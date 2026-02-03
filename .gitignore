@@ -7,7 +7,7 @@ __pycache__/
 *.pyc
 
 # Pygbag build artifacts (Ignore the whole folder)
-build/
+build/web-cache
 
 # macOS junk
 .DS_Store
