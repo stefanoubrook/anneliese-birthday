@@ -1,0 +1,13 @@
+# Virtual Environment
+venv/
+.venv/
+
+# Python internal cache
+__pycache__/
+*.pyc
+
+# Pygbag build artifacts (Ignore the whole folder)
+build/
+
+# macOS junk
+.DS_Store
