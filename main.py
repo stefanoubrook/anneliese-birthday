@@ -196,18 +196,24 @@ async def main():
     try:
         pygame.mixer.music.load("assets/sounds/background_track.mp3")
         pygame.mixer.music.set_volume(0.3)
-    except: pass
+    except Exception as e:
+        print(f"[AUDIO] Failed to load background music: {e}")
     snd_ext = "ogg" if sys.platform == "emscripten" else "mp3"
+    print(f"[AUDIO] Platform: {sys.platform}, using .{snd_ext} for sounds")
     for i in [1, 2]:
         try:
             s = pygame.mixer.Sound(f"assets/sounds/party_girl_{i}.{snd_ext}")
             s.set_volume(0.8)
             match_sounds.append(s)
-        except: pass
+            print(f"[AUDIO] Loaded party_girl_{i}.{snd_ext}")
+        except Exception as e:
+            print(f"[AUDIO] Failed to load party_girl_{i}.{snd_ext}: {e}")
     try:
         party_girl_5 = pygame.mixer.Sound(f"assets/sounds/party_girl_5.{snd_ext}")
         party_girl_5.set_volume(1.0)
-    except: pass
+        print(f"[AUDIO] Loaded party_girl_5.{snd_ext}")
+    except Exception as e:
+        print(f"[AUDIO] Failed to load party_girl_5.{snd_ext}: {e}")
 
     grid = [[Tile(r, c, random.randint(0, 3)) for c in range(GRID_SIZE)] for r in range(GRID_SIZE)]
     while find_matches(grid):
@@ -271,11 +277,17 @@ async def main():
             matches = find_matches(grid)
             if matches:
                 if len(matches) >= 5 and party_girl_5:
-                    try: party_girl_5.play()
-                    except: pass
-                elif match_sounds: 
-                    try: random.choice(match_sounds).play()
-                    except: pass
+                    try:
+                        party_girl_5.play()
+                        print(f"[AUDIO] Playing party_girl_5")
+                    except Exception as e:
+                        print(f"[AUDIO] Failed to play party_girl_5: {e}")
+                elif match_sounds:
+                    try:
+                        random.choice(match_sounds).play()
+                        print(f"[AUDIO] Playing match sound")
+                    except Exception as e:
+                        print(f"[AUDIO] Failed to play match sound: {e}")
                 for r, c in matches:
                     t = grid[r][c]
                     if t:
