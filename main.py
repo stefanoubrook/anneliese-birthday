@@ -254,17 +254,20 @@ async def main():
                 except:
                     pass
                 if IS_WEB:
-                    # Use JavaScript Audio API - pygame.mixer.Sound is unreliable on web
+                    # Use JavaScript Audio API via eval - pygame.mixer.Sound is broken on web
                     try:
-                        for i in [1, 2]:
-                            snd = _platform.window.Audio.new(f"assets/sounds/party_girl_{i}.ogg")
-                            snd.volume = 0.8
-                            web_sounds[f"match_{i}"] = snd
-                        snd5 = _platform.window.Audio.new("assets/sounds/party_girl_5.ogg")
-                        snd5.volume = 1.0
-                        web_sounds["party_girl_5"] = snd5
-                    except:
-                        pass
+                        _platform.window.eval("""
+                            window._game_sounds = {};
+                            window._game_sounds.match_1 = new Audio("assets/sounds/party_girl_1.ogg");
+                            window._game_sounds.match_1.volume = 0.8;
+                            window._game_sounds.match_2 = new Audio("assets/sounds/party_girl_2.ogg");
+                            window._game_sounds.match_2.volume = 0.8;
+                            window._game_sounds.party_girl_5 = new Audio("assets/sounds/party_girl_5.ogg");
+                            window._game_sounds.party_girl_5.volume = 1.0;
+                        """)
+                        web_sounds["loaded"] = True
+                    except Exception as e:
+                        print(f"[AUDIO] JS Audio init failed: {e}")
                 else:
                     for i in [1, 2]:
                         try:
@@ -300,19 +303,14 @@ async def main():
         if stable:
             matches = find_matches(grid)
             if matches:
-                if IS_WEB:
-                    # Use JS Audio on web
+                if IS_WEB and web_sounds.get("loaded"):
+                    # Play via JS Audio on web
                     try:
-                        if len(matches) >= 5 and "party_girl_5" in web_sounds:
-                            s = web_sounds["party_girl_5"]
-                            s.currentTime = 0
-                            s.play()
-                        elif web_sounds:
-                            keys = [k for k in web_sounds if k.startswith("match_")]
-                            if keys:
-                                s = web_sounds[random.choice(keys)]
-                                s.currentTime = 0
-                                s.play()
+                        if len(matches) >= 5:
+                            _platform.window.eval("window._game_sounds.party_girl_5.currentTime=0; window._game_sounds.party_girl_5.play();")
+                        else:
+                            pick = random.choice(["match_1", "match_2"])
+                            _platform.window.eval(f"window._game_sounds.{pick}.currentTime=0; window._game_sounds.{pick}.play();")
                     except:
                         pass
                 else:
