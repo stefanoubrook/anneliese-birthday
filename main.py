@@ -229,18 +229,25 @@ async def main():
                 waiting = False
                 try: pygame.mixer.music.play(-1)
                 except: pass
-                # Unlock Web Audio context for Sound objects by playing them silently
+                # Unlock Web Audio context for Sound objects by playing at volume 0
                 for s in match_sounds:
                     try:
                         s.set_volume(0)
                         s.play()
-                        s.stop()
-                        s.set_volume(0.8)
                     except: pass
                 if party_girl_5:
                     try:
                         party_girl_5.set_volume(0)
                         party_girl_5.play()
+                    except: pass
+                await asyncio.sleep(0.3)
+                for s in match_sounds:
+                    try:
+                        s.stop()
+                        s.set_volume(0.8)
+                    except: pass
+                if party_girl_5:
+                    try:
                         party_girl_5.stop()
                         party_girl_5.set_volume(1.0)
                     except: pass
