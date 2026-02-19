@@ -132,6 +132,11 @@ async def main():
         paparazzi_img = pygame.transform.scale(pygame.image.load("assets/images/paparazzi.png").convert_alpha(), (350, 150))
     except: charli_img = scooby_img = booth_left = addison_img = paparazzi_img = None
 
+    homer_img = None
+    try:
+        homer_img = pygame.transform.scale(pygame.image.load("assets/images/homer.png").convert_alpha(), (127, 153))
+    except: pass
+
     pink_img = None
     try:
         pink_raw = pygame.image.load("assets/images/pink.png").convert_alpha()
@@ -189,13 +194,17 @@ async def main():
     party_girl_5 = None
     try:
         pygame.mixer.music.load("assets/sounds/background_track.mp3")
-        pygame.mixer.music.set_volume(0.3) 
-        for i in [1, 2]:
+        pygame.mixer.music.set_volume(0.3)
+    except: pass
+    for i in [1, 2]:
+        try:
             s = pygame.mixer.Sound(f"assets/sounds/party_girl_{i}.mp3")
-            s.set_volume(0.8) 
+            s.set_volume(0.8)
             match_sounds.append(s)
+        except: pass
+    try:
         party_girl_5 = pygame.mixer.Sound("assets/sounds/party_girl_5.mp3")
-        party_girl_5.set_volume(1.0) 
+        party_girl_5.set_volume(1.0)
     except: pass
 
     grid = [[Tile(r, c, random.randint(0, 3)) for c in range(GRID_SIZE)] for r in range(GRID_SIZE)]
@@ -216,10 +225,25 @@ async def main():
         pygame.display.flip()
         for event in pygame.event.get():
             if event.type == pygame.QUIT: pygame.quit(); return
-            if event.type == pygame.MOUSEBUTTONUP: 
+            if event.type == pygame.MOUSEBUTTONUP:
                 waiting = False
                 try: pygame.mixer.music.play(-1)
                 except: pass
+                # Unlock Web Audio context for Sound objects by playing them silently
+                for s in match_sounds:
+                    try:
+                        s.set_volume(0)
+                        s.play()
+                        s.stop()
+                        s.set_volume(0.8)
+                    except: pass
+                if party_girl_5:
+                    try:
+                        party_girl_5.set_volume(0)
+                        party_girl_5.play()
+                        party_girl_5.stop()
+                        party_girl_5.set_volume(1.0)
+                    except: pass
         await asyncio.sleep(0)
     
     pygame.event.clear()
@@ -359,6 +383,7 @@ async def main():
         if neon_sign_img: screen.blit(get_tinted_surface(neon_sign_img, neon_flash_colors[(color_timer // 30) % 5]), (75, 450))
         if booth_left:
             screen.blit(booth_left, (20, 580))
+            if homer_img: screen.blit(homer_img, (210, 580))
             if pink_img: screen.blit(pink_img, (160, 610))
             if scooby_img: screen.blit(scooby_img, (70, 540))
         if mystery_machine_img:
