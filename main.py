@@ -2,6 +2,7 @@ import pygame
 import asyncio
 import random
 import math
+import sys
 
 # ==========================================
 # 1. SETUP CONSTANTS & CONFIGURATION
@@ -196,14 +197,15 @@ async def main():
         pygame.mixer.music.load("assets/sounds/background_track.mp3")
         pygame.mixer.music.set_volume(0.3)
     except: pass
+    snd_ext = "ogg" if sys.platform == "emscripten" else "mp3"
     for i in [1, 2]:
         try:
-            s = pygame.mixer.Sound(f"assets/sounds/party_girl_{i}.mp3")
+            s = pygame.mixer.Sound(f"assets/sounds/party_girl_{i}.{snd_ext}")
             s.set_volume(0.8)
             match_sounds.append(s)
         except: pass
     try:
-        party_girl_5 = pygame.mixer.Sound("assets/sounds/party_girl_5.mp3")
+        party_girl_5 = pygame.mixer.Sound(f"assets/sounds/party_girl_5.{snd_ext}")
         party_girl_5.set_volume(1.0)
     except: pass
 
