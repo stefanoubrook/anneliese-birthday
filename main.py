@@ -193,27 +193,6 @@ async def main():
 
     match_sounds = []
     party_girl_5 = None
-    try:
-        pygame.mixer.music.load("assets/sounds/background_track.mp3")
-        pygame.mixer.music.set_volume(0.3)
-    except Exception as e:
-        print(f"[AUDIO] Failed to load background music: {e}")
-    snd_ext = "ogg" if sys.platform == "emscripten" else "mp3"
-    print(f"[AUDIO] Platform: {sys.platform}, using .{snd_ext} for sounds")
-    for i in [1, 2]:
-        try:
-            s = pygame.mixer.Sound(f"assets/sounds/party_girl_{i}.{snd_ext}")
-            s.set_volume(0.8)
-            match_sounds.append(s)
-            print(f"[AUDIO] Loaded party_girl_{i}.{snd_ext}")
-        except Exception as e:
-            print(f"[AUDIO] Failed to load party_girl_{i}.{snd_ext}: {e}")
-    try:
-        party_girl_5 = pygame.mixer.Sound(f"assets/sounds/party_girl_5.{snd_ext}")
-        party_girl_5.set_volume(1.0)
-        print(f"[AUDIO] Loaded party_girl_5.{snd_ext}")
-    except Exception as e:
-        print(f"[AUDIO] Failed to load party_girl_5.{snd_ext}: {e}")
 
     grid = [[Tile(r, c, random.randint(0, 3)) for c in range(GRID_SIZE)] for r in range(GRID_SIZE)]
     while find_matches(grid):
@@ -235,30 +214,30 @@ async def main():
             if event.type == pygame.QUIT: pygame.quit(); return
             if event.type == pygame.MOUSEBUTTONUP:
                 waiting = False
-                try: pygame.mixer.music.play(-1)
-                except: pass
-                # Unlock Web Audio context for Sound objects by playing at volume 0
-                for s in match_sounds:
+                # Init audio after user gesture so browser allows AudioContext
+                snd_ext = "ogg" if sys.platform == "emscripten" else "mp3"
+                print(f"[AUDIO] Platform: {sys.platform}, using .{snd_ext} for sounds")
+                try:
+                    pygame.mixer.music.load("assets/sounds/background_track.mp3")
+                    pygame.mixer.music.set_volume(0.3)
+                    pygame.mixer.music.play(-1)
+                    print("[AUDIO] Background music started")
+                except Exception as e:
+                    print(f"[AUDIO] Failed to load/play background music: {e}")
+                for i in [1, 2]:
                     try:
-                        s.set_volume(0)
-                        s.play()
-                    except: pass
-                if party_girl_5:
-                    try:
-                        party_girl_5.set_volume(0)
-                        party_girl_5.play()
-                    except: pass
-                await asyncio.sleep(0.3)
-                for s in match_sounds:
-                    try:
-                        s.stop()
+                        s = pygame.mixer.Sound(f"assets/sounds/party_girl_{i}.{snd_ext}")
                         s.set_volume(0.8)
-                    except: pass
-                if party_girl_5:
-                    try:
-                        party_girl_5.stop()
-                        party_girl_5.set_volume(1.0)
-                    except: pass
+                        match_sounds.append(s)
+                        print(f"[AUDIO] Loaded party_girl_{i}.{snd_ext}")
+                    except Exception as e:
+                        print(f"[AUDIO] Failed to load party_girl_{i}.{snd_ext}: {e}")
+                try:
+                    party_girl_5 = pygame.mixer.Sound(f"assets/sounds/party_girl_5.{snd_ext}")
+                    party_girl_5.set_volume(1.0)
+                    print(f"[AUDIO] Loaded party_girl_5.{snd_ext}")
+                except Exception as e:
+                    print(f"[AUDIO] Failed to load party_girl_5.{snd_ext}: {e}")
         await asyncio.sleep(0)
     
     pygame.event.clear()
