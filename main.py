@@ -4,6 +4,10 @@ import random
 import math
 import sys
 
+IS_WEB = sys.platform == "emscripten"
+if IS_WEB:
+    import platform as _platform
+
 # ==========================================
 # 1. SETUP CONSTANTS & CONFIGURATION
 # ==========================================
@@ -218,6 +222,7 @@ async def main():
     # --- INIT GAME STATE ---
     match_sounds = []
     party_girl_5 = None
+    web_sounds = {}  # For JS Audio fallback on web
 
     grid = [[Tile(r, c, random.randint(0, 3)) for c in range(GRID_SIZE)] for r in range(GRID_SIZE)]
     while find_matches(grid):
@@ -242,25 +247,37 @@ async def main():
             if event.type == pygame.MOUSEBUTTONUP:
                 waiting = False
                 # Init audio after user gesture so browser allows AudioContext
-                snd_ext = "ogg" if sys.platform == "emscripten" else "mp3"
                 try:
                     pygame.mixer.music.load("assets/sounds/background_track.mp3")
                     pygame.mixer.music.set_volume(0.3)
                     pygame.mixer.music.play(-1)
                 except:
                     pass
-                for i in [1, 2]:
+                if IS_WEB:
+                    # Use JavaScript Audio API - pygame.mixer.Sound is unreliable on web
                     try:
-                        s = pygame.mixer.Sound(f"assets/sounds/party_girl_{i}.{snd_ext}")
-                        s.set_volume(0.8)
-                        match_sounds.append(s)
+                        for i in [1, 2]:
+                            snd = _platform.window.Audio.new(f"assets/sounds/party_girl_{i}.ogg")
+                            snd.volume = 0.8
+                            web_sounds[f"match_{i}"] = snd
+                        snd5 = _platform.window.Audio.new("assets/sounds/party_girl_5.ogg")
+                        snd5.volume = 1.0
+                        web_sounds["party_girl_5"] = snd5
                     except:
                         pass
-                try:
-                    party_girl_5 = pygame.mixer.Sound(f"assets/sounds/party_girl_5.{snd_ext}")
-                    party_girl_5.set_volume(1.0)
-                except:
-                    pass
+                else:
+                    for i in [1, 2]:
+                        try:
+                            s = pygame.mixer.Sound(f"assets/sounds/party_girl_{i}.mp3")
+                            s.set_volume(0.8)
+                            match_sounds.append(s)
+                        except:
+                            pass
+                    try:
+                        party_girl_5 = pygame.mixer.Sound("assets/sounds/party_girl_5.mp3")
+                        party_girl_5.set_volume(1.0)
+                    except:
+                        pass
         await asyncio.sleep(0)
 
     pygame.event.clear()
@@ -283,16 +300,32 @@ async def main():
         if stable:
             matches = find_matches(grid)
             if matches:
-                if len(matches) >= 5 and party_girl_5:
+                if IS_WEB:
+                    # Use JS Audio on web
                     try:
-                        party_girl_5.play()
+                        if len(matches) >= 5 and "party_girl_5" in web_sounds:
+                            s = web_sounds["party_girl_5"]
+                            s.currentTime = 0
+                            s.play()
+                        elif web_sounds:
+                            keys = [k for k in web_sounds if k.startswith("match_")]
+                            if keys:
+                                s = web_sounds[random.choice(keys)]
+                                s.currentTime = 0
+                                s.play()
                     except:
                         pass
-                elif match_sounds:
-                    try:
-                        random.choice(match_sounds).play()
-                    except:
-                        pass
+                else:
+                    if len(matches) >= 5 and party_girl_5:
+                        try:
+                            party_girl_5.play()
+                        except:
+                            pass
+                    elif match_sounds:
+                        try:
+                            random.choice(match_sounds).play()
+                        except:
+                            pass
                 for r, c in matches:
                     t = grid[r][c]
                     if t:
